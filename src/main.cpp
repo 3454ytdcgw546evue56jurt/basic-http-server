@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <thread>
 #include "http.h"
+#include <cstring>
 
 void Server_http_thread(int connection_socket)
 {
@@ -19,6 +20,15 @@ void Server_http_thread(int connection_socket)
         char Data_buffer[Data_buffer_size];
 
         int data_size = recv(connection_socket, Data_buffer, sizeof(Data_buffer), 0);
+
+        const char* server_response =
+                    "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/html; charset=UTF-8\r\n"
+                    "Content-Length: 24\r\n"
+                    "Connection: close\r\n"
+                    "\r\n"
+                    "<h1>Hello from C++!</h1>";
+        send(connection_socket,server_response, strlen(server_response), 0);
 
         if(data_size > 0)
         {
