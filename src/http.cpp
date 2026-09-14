@@ -17,6 +17,7 @@
 #include "http.h"
 #include <cstring>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -46,22 +47,17 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 {
     HTTP_request Parsed_request = HTTP_request();
 
-    //parsing the header
-    char header_char = 0;
-    int header_char_index = 0;
-    while(header_char != 0x0A)//0A is comonly a new line 
-    //TODO there are to many fucking new line implementaions, but it would be good to support them.
-    {
-        header_char = Data[header_char_index];
+    //If anyone had better idea i'm all ears
+    //C and C++ don't have a good newline implementation
+    int header_line_size = 0;
+    header_line_size = strchr(Data, '\n')-Data;
+    printf("header_line_size %d \n",header_line_size);
 
-        if(header_char_index > Request_size)
-        {
-            //TODO Error out.
-            //Either this is not HTTP or connection is fucked.
-        }
-        header_char_index++;
-    }
+    char Header[header_line_size+1];
 
+    memcpy(Header,Data,header_line_size);
+    //I'm not shooting my self in the foot this time.
+    Header[header_line_size+1] = 0;
 
     return Parsed_request;
 }
