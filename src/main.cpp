@@ -10,41 +10,9 @@
 #include <thread>
 #include "http.h"
 #include <cstring>
+#include <vector>
 
-void Server_http_thread(int connection_socket)
-{
-    while(1)
-    {
-        int Data_buffer_size = 0;
-        ioctl(connection_socket, FIONREAD, &Data_buffer_size);
-        char Data_buffer[Data_buffer_size];
-
-        int data_size = recv(connection_socket, Data_buffer, sizeof(Data_buffer), 0);
-
-        const char* server_response =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: text/html; charset=UTF-8\r\n"
-                    "Content-Length: 24\r\n"
-                    "Connection: close\r\n"
-                    "\r\n"
-                    "<h1>Hello from C++!</h1>";
-        send(connection_socket,server_response, strlen(server_response), 0);
-
-        if(data_size > 0)
-        {
-            printf("Received data:%s \n",Data_buffer);
-        }
-        else if(data_size < 0)
-        {
-            //TODO error handling
-        }
-        else if(data_size == 0)
-        {
-            printf("Client disconnected... \n");
-            return;
-        }
-    }
-}
+using namespace std;
 
 int main(int argc,char **args)
 {
@@ -185,6 +153,8 @@ int main(int argc,char **args)
         //TODO error handling
         exit(lisetn_res);
     }
+
+    Init_HTTP_Utils();
 
     printf("Web server started \n");
     while(1)

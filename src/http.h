@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 
-enum HTTP_request_types
+using namespace std;
+
+enum HTTP_request_type_enums
 {
     GET, //retrieve data
     POST, //create/send data
@@ -85,14 +87,13 @@ enum Content_types
 
 struct HTTP_request
 {
-    HTTP_request_types type = GET;
+    HTTP_request_type_enums type = GET;
     int http_major_version = 0;
     int http_minor_version = 0;
 
-    //vector<Content_types> accept;
+    vector<Content_types> accept;
 
     char *path;
-
     char *host;
 
     //TODO
@@ -104,3 +105,7 @@ struct HTTP_request
     //Sec-Fetch-User: ?1
     //Priority: u=0, i
 };
+
+void Init_HTTP_Utils();
+HTTP_request Parse_HTTP_request(char Data[],int Request_size);
+void Server_http_thread(int connection_socket);
