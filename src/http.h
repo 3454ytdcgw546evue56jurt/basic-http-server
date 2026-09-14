@@ -9,7 +9,7 @@ enum HTTP_request_type_enums
     POST, //create/send data
     PUT, //replace data
     PATCH, //partially update data
-    DELETE, //remove data
+    DELETE_, //remove data
 };
 
 enum Content_types

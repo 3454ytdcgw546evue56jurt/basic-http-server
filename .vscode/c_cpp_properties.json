@@ -1,17 +1,14 @@
 {
-    "configurations":
+    "configurations": 
     [
         {
-            "name": "Linux",
+            "name": "UCRT64",
+            "compilerPath": "E:\\msys2\\mingw64\\bin\\g++.exe",
             "includePath": 
             [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "gnu23",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "windows-gcc-x64"
         }
     ],
     "version": 4

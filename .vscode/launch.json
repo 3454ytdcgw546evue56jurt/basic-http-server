@@ -13,6 +13,19 @@
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb"
+        },
+        {
+            "name": "Launch windows",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\http.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "${env:gdb}"
         }
     ]
 }

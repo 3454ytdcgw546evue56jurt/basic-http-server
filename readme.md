@@ -1,0 +1,1 @@
+Windows need system variable gdb to point to gdb debuger

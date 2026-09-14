@@ -1,10 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#if defined(_WIN32)
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <Windows.h>
+#elif defined(__linux__)
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+#endif
 #include <unistd.h>
 #include <cerrno>
 #include <thread>
@@ -68,10 +74,12 @@ int main(int argc,char **args)
                 error_message = "EPROTOTYPE, Socket type incompatible with protocol";
             }
             break;
-            case ESOCKTNOSUPPORT:
-            {
-                error_message = "ESOCKTNOSUPPORT, Socket type not supported";
-            }
+            #if defined(__linux__)
+                case ESOCKTNOSUPPORT:
+                {
+                    error_message = "ESOCKTNOSUPPORT, Socket type not supported";
+                }
+            #endif
             default:
             {
                 error_message = "Unknown error";

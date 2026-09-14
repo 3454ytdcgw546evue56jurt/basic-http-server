@@ -1,10 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#if defined(_WIN32)
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <Windows.h>
+#elif defined(__linux__)
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+#endif
 #include <unistd.h>
 #include <cerrno>
 #include <thread>
@@ -13,7 +19,6 @@
 #include <vector>
 
 using namespace std;
-
 
 struct HTTP_request_type
 {
@@ -34,7 +39,7 @@ void Init_HTTP_Utils()
     RequestTypes.push_back(HTTP_request_type(POST,"POST"));
     RequestTypes.push_back(HTTP_request_type(PUT,"PUT"));
     RequestTypes.push_back(HTTP_request_type(PATCH,"PATCH"));
-    RequestTypes.push_back(HTTP_request_type(DELETE,"DELETE"));
+    RequestTypes.push_back(HTTP_request_type(DELETE_,"DELETE"));
 };
 
 HTTP_request Parse_HTTP_request(char Data[],int Request_size)
@@ -43,7 +48,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 
     char header_space_check = 0;
     int header_space_check_index = 0;
-    while(space_check != *" ")
+    while(header_space_check != *" ")
     {
         header_space_check = Data[header_space_check_index];
 
@@ -63,7 +68,9 @@ void Server_http_thread(int connection_socket)
     while(1)
     {
         int Data_buffer_size = 0;
-        ioctl(connection_socket, FIONREAD, &Data_buffer_size);
+        #if defined(__linux__)
+            ioctl(connection_socket, FIONREAD, &Data_buffer_size);
+        #endif
         
         char Data_buffer[Data_buffer_size];
         int data_size = recv(connection_socket, Data_buffer, Data_buffer_size, 0);
