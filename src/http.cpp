@@ -23,12 +23,12 @@ using namespace std;
 struct HTTP_request_type
 {
     HTTP_request_type_enums Enum;
-    char *name;
+    const char *name;
 
     HTTP_request_type(HTTP_request_type_enums _Enum,const char *_name)
     {
         Enum =_Enum;
-        name = name;
+        name = _name;
     }
 };
 vector<HTTP_request_type> RequestTypes;
@@ -46,19 +46,22 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 {
     HTTP_request Parsed_request = HTTP_request();
 
-    char header_space_check = 0;
-    int header_space_check_index = 0;
-    while(header_space_check != *" ")
+    //parsing the header
+    char header_char = 0;
+    int header_char_index = 0;
+    while(header_char != 0x0A)//0A is comonly a new line 
+    //TODO there are to many fucking new line implementaions, but it would be good to support them.
     {
-        header_space_check = Data[header_space_check_index];
+        header_char = Data[header_char_index];
 
-        if(header_space_check_index > Request_size)
+        if(header_char_index > Request_size)
         {
             //TODO Error out.
             //Either this is not HTTP or connection is fucked.
         }
-        header_space_check_index++;
+        header_char_index++;
     }
+
 
     return Parsed_request;
 }
@@ -67,27 +70,30 @@ void Server_http_thread(int connection_socket)
 {
     while(1)
     {
-        int Data_buffer_size = 0;
         #if defined(__linux__)
+            int Data_buffer_size = 0;
             ioctl(connection_socket, FIONREAD, &Data_buffer_size);
+        #elif defined(_WIN32)
+            u_long Data_buffer_size = 0;
+            ioctlsocket(connection_socket, FIONREAD, &Data_buffer_size);
         #endif
         
         char Data_buffer[Data_buffer_size];
         int data_size = recv(connection_socket, Data_buffer, Data_buffer_size, 0);
 
-        HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
-
-        const char* server_response =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: text/html; charset=UTF-8\r\n"
-                    "Content-Length: 24\r\n"
-                    "Connection: close\r\n"
-                    "\r\n"
-                    "<h1>Hello from C++!</h1>";
-        send(connection_socket,server_response, strlen(server_response), 0);
-
         if(data_size > 0)
         {
+            HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
+
+            const char* server_response =
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/html; charset=UTF-8\r\n"
+                        "Content-Length: 24\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        "<h1>Hello from C++!</h1>";
+            send(connection_socket,server_response, strlen(server_response), 0); 
+
             printf("Received data:\n %s \n",Data_buffer);
         }
         else if(data_size < 0)
@@ -97,6 +103,7 @@ void Server_http_thread(int connection_socket)
         else if(data_size == 0)
         {
             printf("Client disconnected... \n");
+            close(connection_socket);
             return;
         }
     }

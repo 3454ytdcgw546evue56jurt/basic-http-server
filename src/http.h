@@ -5,6 +5,7 @@ using namespace std;
 
 enum HTTP_request_type_enums
 {
+    INVALID, //Error state
     GET, //retrieve data
     POST, //create/send data
     PUT, //replace data
