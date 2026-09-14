@@ -1,3 +1,6 @@
+all:
+	$(error Speficy platform)
+
 linux:
 	clear
 	g++ \
