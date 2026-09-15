@@ -56,8 +56,47 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     char Header[header_line_size+1];
 
     memcpy(Header,Data,header_line_size);
-    //I'm not shooting my self in the foot this time.
-    Header[header_line_size+1] = 0;
+
+    //getting the request_type
+    int RequestTypes_size = RequestTypes.size();
+    const char *request_type_searched = nullptr;
+    char *request_type_checked = nullptr;
+    HTTP_request_type_enums HTTP_request_type_enum = INVALID;
+    for(int i =0;i<RequestTypes_size;i++)
+    {
+        request_type_searched = RequestTypes.at(i).name;
+
+        request_type_checked = strstr(Header, request_type_searched);
+
+        if(request_type_checked != nullptr)
+        {
+            HTTP_request_type_enum = RequestTypes.at(i).Enum;
+        }
+    }
+    Parsed_request.type = HTTP_request_type_enum;
+
+    //getting the version
+    char *version;
+    version = strstr(Header, "HTTP/")+5;
+    char *major_minor_version_seperator;
+    major_minor_version_seperator = strstr(Header, ".")+1;
+    
+    //parsin the major version
+    int major_version_char_size = major_minor_version_seperator-version;
+    char major_version_char[major_version_char_size];
+    memccpy(major_version_char,version,major_version_char_size,1);
+    int major_version = atoi(major_version_char);
+
+    //parsing the minor version
+    int minor_version_char_size = strlen(major_minor_version_seperator);
+    char minor_version_char[minor_version_char_size];
+    memccpy(minor_version_char,major_minor_version_seperator,minor_version_char_size,1);
+    int minor_version = atoi(minor_version_char);
+
+    Parsed_request.http_major_version = major_version;
+    Parsed_request.http_minor_version = minor_version;
+    //doing this way more memory and cpu eficiente and easier
+    //Win for everyone
 
     return Parsed_request;
 }
