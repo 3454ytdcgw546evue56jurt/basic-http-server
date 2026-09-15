@@ -12,8 +12,19 @@ enum HTTP_request_type_enums
     PATCH, //partially update data
     DELETE_, //remove data
 };
+struct HTTP_request_type
+{
+    HTTP_request_type_enums Enum;
+    const char *name;
 
-enum Content_types
+    HTTP_request_type(HTTP_request_type_enums _Enum,const char *_name)
+    {
+        Enum =_Enum;
+        name = _name;
+    }
+};
+
+enum Content_type_enum
 {
     //Type application:
     application_java_archive, //application/java-archive
@@ -86,25 +97,36 @@ enum Content_types
     application_vnd_mozilla_xul_xml, //application/vnd.mozilla.xul+xml
 };
 
+struct content_type
+{
+    Content_type_enum Enum;
+    const char *name;
+
+    content_type(Content_type_enum _Enum,const char *_name)
+    {
+        Enum =_Enum;
+        name = _name;
+    }
+};
+
+struct meta_data
+{
+    char *Name;
+    char *content;
+};
+
 struct HTTP_request
 {
     HTTP_request_type_enums type = GET;
     int http_major_version = 0;
     int http_minor_version = 0;
 
-    vector<Content_types> accept;
+    vector<content_type> accept;
 
     char *path;
     char *host;
 
-    //TODO
-    //Accept-Language: en-US,en;q=0.9
-    //Accept-Encoding: gzip, deflate, br, zstd
-    //Sec-Fetch-Dest: document
-    //Sec-Fetch-Mode: navigate
-    //Sec-Fetch-Site: none
-    //Sec-Fetch-User: ?1
-    //Priority: u=0, i
+    vector<meta_data> meta_datas;
 };
 
 void Init_HTTP_Utils();

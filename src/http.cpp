@@ -15,24 +15,15 @@
 #include <cerrno>
 #include <thread>
 #include "http.h"
+#include "Utils.h"
 #include <cstring>
 #include <vector>
 #include <string>
 
 using namespace std;
 
-struct HTTP_request_type
-{
-    HTTP_request_type_enums Enum;
-    const char *name;
-
-    HTTP_request_type(HTTP_request_type_enums _Enum,const char *_name)
-    {
-        Enum =_Enum;
-        name = _name;
-    }
-};
 vector<HTTP_request_type> RequestTypes;
+vector<content_type> content_types;
 
 void Init_HTTP_Utils()
 {
@@ -41,10 +32,81 @@ void Init_HTTP_Utils()
     RequestTypes.push_back(HTTP_request_type(PUT,"PUT"));
     RequestTypes.push_back(HTTP_request_type(PATCH,"PATCH"));
     RequestTypes.push_back(HTTP_request_type(DELETE_,"DELETE"));
+
+    //Type application:
+    content_types.push_back(content_type(application_java_archive,"application/java-archive"));
+    content_types.push_back(content_type(application_EDI_X12,"application/EDI-X12")); 
+    content_types.push_back(content_type(application_EDIFACT,"application/EDIFACT"));
+    content_types.push_back(content_type(application_javascript,"application/javascript (obsolete)"));
+    content_types.push_back(content_type(application_octet_stream, "application/octet-stream"));
+    content_types.push_back(content_type(application_ogg, "application/ogg"));
+    content_types.push_back(content_type(application_pdf, "application/pdf"));
+    content_types.push_back(content_type(application_xhtml_xml, "application/xhtml+xml"));
+    content_types.push_back(content_type(application_x_shockwave_flash, "application/x-shockwave-flash"));
+    content_types.push_back(content_type(application_json, "application/json"));
+    content_types.push_back(content_type(application_ld_json, "application/ld+json"));
+    content_types.push_back(content_type(application_xml, "application/xml"));
+    content_types.push_back(content_type(application_zip, "application/zip"));
+    content_types.push_back(content_type(application_x_www_form_urlencoded, "application/x-www-form-urlencoded"));
+
+    //Type audio:
+    content_types.push_back(content_type(audio_mpeg, "audio/mpeg"));
+    content_types.push_back(content_type(audio_x_ms_wma, "audio/x-ms-wma"));
+    content_types.push_back(content_type(audio_vnd_rn_realaudio, "audio/vnd.rn-realaudio"));
+    content_types.push_back(content_type(audio_x_wav, "audio/x-wav"));
+
+    //Type image:
+    content_types.push_back(content_type(image_gif, "image/gif"));
+    content_types.push_back(content_type(image_jpeg, "image/jpeg"));
+    content_types.push_back(content_type(image_png, "image/png"));
+    content_types.push_back(content_type(image_tiff, "image/tiff"));
+    content_types.push_back(content_type(image_vnd_microsoft_icon, "image/vnd.microsoft.icon"));
+    content_types.push_back(content_type(image_x_icon, "image/x-icon"));
+    content_types.push_back(content_type(image_vnd_djvu, "image/vnd.djvu"));
+    content_types.push_back(content_type(image_svg_xml, "image/svg+xml"));
+
+    //Type multipart:
+    content_types.push_back(content_type(multipart_mixed, "multipart/mixed"));
+    content_types.push_back(content_type(multipart_alternative, "multipart/alternative"));
+    content_types.push_back(content_type(multipart_related, "multipart/related (using by MHTML (HTML mail).)"));
+    content_types.push_back(content_type(multipart_form_data, "multipart/form-data"));
+
+    //Type text:
+    content_types.push_back(content_type(text_css, "text/css"));
+    content_types.push_back(content_type(text_csv, "text/csv"));
+    content_types.push_back(content_type(text_event_stream, "text/event-stream"));
+    content_types.push_back(content_type(text_html, "text/html"));
+    content_types.push_back(content_type(text_javascript, "text/javascript"));
+    content_types.push_back(content_type(text_plain, "text/plain"));
+    content_types.push_back(content_type(text_xml, "text/xml"));
+
+    //Type video:
+    content_types.push_back(content_type(video_mpeg, "video/mpeg"));
+    content_types.push_back(content_type(video_mp4, "video/mp4"));
+    content_types.push_back(content_type(video_quicktime, "video/quicktime"));
+    content_types.push_back(content_type(video_x_ms_wmv, "video/x-ms-wmv"));
+    content_types.push_back(content_type(video_x_msvideo, "video/x-msvideo"));
+    content_types.push_back(content_type(video_x_flv, "video/x-flv"));
+    content_types.push_back(content_type(video_webm, "video/webm"));
+
+    //Type vnd:
+    content_types.push_back(content_type(application_vnd_android_package_archive, "application/vnd.android.package-archive"));
+    content_types.push_back(content_type(application_vnd_oasis_opendocument_text, "application/vnd.oasis.opendocument.text"));
+    content_types.push_back(content_type(application_vnd_oasis_opendocument_spreadsheet, "application/vnd.oasis.opendocument.spreadsheet"));
+    content_types.push_back(content_type(application_vnd_oasis_opendocument_presentation, "application/vnd.oasis.opendocument.presentation"));
+    content_types.push_back(content_type(application_vnd_oasis_opendocument_graphics, "application/vnd.oasis.opendocument.graphics"));
+    content_types.push_back(content_type(application_vnd_ms_excel, "application/vnd.ms-excel"));
+    content_types.push_back(content_type(application_vnd_openxmlformats_officedocument_spreadsheetml_sheet, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    content_types.push_back(content_type(application_vnd_ms_powerpoint, "application/vnd.ms-powerpoint"));
+    content_types.push_back(content_type(application_vnd_openxmlformats_officedocument_presentationml_presentation, "application/vnd.openxmlformats-officedocument.presentationml.presentation"));
+    content_types.push_back(content_type(application_msword, "application/msword"));
+    content_types.push_back(content_type(application_vnd_openxmlformats_officedocument_wordprocessingml_document, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+    content_types.push_back(content_type(application_vnd_mozilla_xul_xml, "application/vnd.mozilla.xul+xml"));
 };
 
 HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 {
+    printf("Parsing HTTP request \n");
     HTTP_request Parsed_request = HTTP_request();
 
     //If anyone had better idea i'm all ears
@@ -97,6 +159,20 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     Parsed_request.http_minor_version = minor_version;
     //doing this way more memory and cpu eficiente and easier
     //Win for everyone
+    
+    //Reading the meta data
+    int curr_metadata_line_index = 1;
+    char *curr_metadata_line = Get_line(Data,curr_metadata_line_index);
+
+    while(curr_metadata_line != nullptr)
+    {
+        curr_metadata_line = Get_line(Data,curr_metadata_line_index);
+        curr_metadata_line_index++;
+
+        printf("curr_metadata_line %s \n",curr_metadata_line);
+    }
+
+    printf("HTTP request parsed\n");
 
     return Parsed_request;
 }
