@@ -113,7 +113,6 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     //C and C++ don't have a good newline implementation
     int header_line_size = 0;
     header_line_size = strchr(Data, '\n')-Data;
-    printf("header_line_size %d \n",header_line_size);
 
     char Header[header_line_size+1];
 
@@ -170,6 +169,8 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         curr_metadata_line_index++;
 
         printf("curr_metadata_line %s \n",curr_metadata_line);
+
+        free(curr_metadata_line);
     }
 
     printf("HTTP request parsed\n");
