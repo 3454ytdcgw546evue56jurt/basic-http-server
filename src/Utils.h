@@ -24,7 +24,7 @@ char *Get_line(char *Text,unsigned int line)
             break;
         }
 
-        if(Text[i] == '\n')
+        if(Text[i] == '\n' || Text[i] == '\r\n')
         {
             //hacky but works
             line_start = line_end;
@@ -45,9 +45,9 @@ char *Get_line(char *Text,unsigned int line)
     }
 
     int line_size = line_end - line_start;
-    char *new_line = (char *) malloc(sizeof(char *)*line_size);
+    char *new_line = (char *) malloc(line_size);
     
-    for(int i = 0;i<Text_lenght;i++)
+    for(int i = 0;i<line_size;i++)
     {
         new_line[i] = Text[line_start+i];
     }

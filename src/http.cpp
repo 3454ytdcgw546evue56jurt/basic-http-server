@@ -107,16 +107,10 @@ void Init_HTTP_Utils()
 HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 {
     printf("Parsing HTTP request \n");
+    char *current_http_line = Get_line(Data,1);
     HTTP_request Parsed_request = HTTP_request();
 
-    //If anyone had better idea i'm all ears
-    //C and C++ don't have a good newline implementation
-    int header_line_size = 0;
-    header_line_size = strchr(Data, '\n')-Data;
-
-    char Header[header_line_size+1];
-
-    memcpy(Header,Data,header_line_size);
+    int header_line_size = strlen(current_http_line);
 
     //getting the request_type
     int RequestTypes_size = RequestTypes.size();
@@ -127,7 +121,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     {
         request_type_searched = RequestTypes.at(i).name;
 
-        request_type_checked = strstr(Header, request_type_searched);
+        request_type_checked = strstr(current_http_line, request_type_searched);
 
         if(request_type_checked != nullptr)
         {
@@ -137,10 +131,11 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     Parsed_request.type = HTTP_request_type_enum;
 
     //getting the version
+    
     char *version;
-    version = strstr(Header, "HTTP/")+5;
+    version = strstr(current_http_line, "HTTP/")+5;
     char *major_minor_version_seperator;
-    major_minor_version_seperator = strstr(Header, ".")+1;
+    major_minor_version_seperator = strstr(current_http_line, ".")+1;
     
     //parsin the major version
     int major_version_char_size = major_minor_version_seperator-version;
@@ -156,21 +151,21 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 
     Parsed_request.http_major_version = major_version;
     Parsed_request.http_minor_version = minor_version;
-    //doing this way more memory and cpu eficiente and easier
-    //Win for everyone
+    //To lazy to make it better
     
     //Reading the meta data
-    int curr_metadata_line_index = 1;
-    char *curr_metadata_line = Get_line(Data,curr_metadata_line_index);
+    //free(current_http_line);
+    int current_http_line_index = 2;
 
-    while(curr_metadata_line != nullptr)
+    while(current_http_line != nullptr)
     {
-        curr_metadata_line = Get_line(Data,curr_metadata_line_index);
-        curr_metadata_line_index++;
+        current_http_line = Get_line(Data,current_http_line_index);
+        current_http_line_index++;
 
-        printf("curr_metadata_line %s \n",curr_metadata_line);
-
-        free(curr_metadata_line);
+        if(current_http_line != nullptr)
+        {
+            printf("curr_metadata_line %s \n",current_http_line);
+        }
     }
 
     printf("HTTP request parsed\n");
@@ -205,8 +200,6 @@ void Server_http_thread(int connection_socket)
                         "\r\n"
                         "<h1>Hello from C++!</h1>";
             send(connection_socket,server_response, strlen(server_response), 0); 
-
-            printf("Received data:\n %s \n",Data_buffer);
         }
         else if(data_size < 0)
         {
