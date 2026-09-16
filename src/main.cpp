@@ -21,9 +21,15 @@
 
 using namespace std;
 
+void HTTP_server_clean_up()
+{
+    //TODO server cleanup
+}
+
 int main(int argc,char **args)
 {
     printf("Starting web server \n");
+    std::atexit(HTTP_server_clean_up);
     #if defined(_WIN32)
         WSADATA wsaData;
         WSAStartup(MAKEWORD(2, 2), &wsaData);    

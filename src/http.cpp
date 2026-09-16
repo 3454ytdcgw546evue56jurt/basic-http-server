@@ -131,22 +131,18 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     Parsed_request.type = HTTP_request_type_enum;
 
     //getting the version
-    
-    char *version;
-    version = strstr(current_http_line, "HTTP/")+5;
-    char *major_minor_version_seperator;
-    major_minor_version_seperator = strstr(current_http_line, ".")+1;
+    char *version = strstr(current_http_line, "HTTP/")+5;
     
     //parsin the major version
-    int major_version_char_size = major_minor_version_seperator-version;
+    int major_version_char_size = Char_at(version,'.');
     char major_version_char[major_version_char_size];
     memccpy(major_version_char,version,major_version_char_size,1);
     int major_version = atoi(major_version_char);
 
     //parsing the minor version
-    int minor_version_char_size = strlen(major_minor_version_seperator);
+    int minor_version_char_size = strlen(version)-(major_version_char_size);
     char minor_version_char[minor_version_char_size];
-    memccpy(minor_version_char,major_minor_version_seperator,minor_version_char_size,1);
+    memccpy(minor_version_char,&version[major_version_char_size+1],minor_version_char_size,1);
     int minor_version = atoi(minor_version_char);
 
     Parsed_request.http_major_version = major_version;
@@ -154,7 +150,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     //To lazy to make it better
     
     //Reading the meta data
-    //free(current_http_line);
+    free(current_http_line);
     int current_http_line_index = 2;
 
     while(current_http_line != nullptr)
@@ -165,6 +161,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         if(current_http_line != nullptr)
         {
             printf("curr_metadata_line %s \n",current_http_line);
+            free(current_http_line);
         }
     }
 
@@ -173,8 +170,15 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     return Parsed_request;
 }
 
+void Server_http_thread_cleanup()
+{
+    //TODO Thread cleanup
+}
+
 void Server_http_thread(int connection_socket)
 {
+    std::atexit(Server_http_thread_cleanup);
+
     while(1)
     {
         #if defined(__linux__)

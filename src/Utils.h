@@ -45,7 +45,7 @@ char *Get_line(char *Text,unsigned int line)
     }
 
     int line_size = line_end - line_start;
-    char *new_line = (char *) malloc(line_size);
+    char *new_line = (char *) malloc(line_size+1);
     
     for(int i = 0;i<line_size;i++)
     {
@@ -55,4 +55,20 @@ char *Get_line(char *Text,unsigned int line)
     new_line[line_size] = 0x0;
 
     return new_line;
+}
+
+//Thi might exists in standart libary, but i made it my self becose why the fuck not.
+int Char_at(char *Text,char character)
+{
+    int Text_lenght = strlen(Text)+1;
+
+    for(int i = 0;i<Text_lenght;i++)
+    {
+        if(Text[i] == character)
+        {
+            return i;
+        }
+    }
+    
+    return -1;
 }
