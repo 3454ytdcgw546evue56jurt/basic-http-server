@@ -12,7 +12,7 @@ char *Get_line(char *Text,unsigned int line)
         return nullptr;
     }
 
-    int Text_lenght = strlen(Text);
+    int Text_lenght = strlen(Text)+1;
     int current_line = 0;
     int line_start = 0;
     int line_end = 0;
@@ -24,7 +24,7 @@ char *Get_line(char *Text,unsigned int line)
             break;
         }
 
-        if(Text[i] == '\n' || Text[i] == '\r\n')
+        if(Text[i] == '\n' || Text[i] == '\r\n' || Text[i] == 0x0)
         {
             //hacky but works
             line_start = line_end;
