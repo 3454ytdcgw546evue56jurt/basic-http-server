@@ -1,36 +1,58 @@
 #pragma once
 #include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 //Standart c library doesn't have this basic function ¯\_(ツ)_/¯
 //Dumb as fuck
-char *Get_line(char *Text,int line)
+char *Get_line(char *Text,unsigned int line)
 {
     if(Text == nullptr)
     {
         return nullptr;
     }
 
-    int Current_line = 0;
-    char current_Text_char = Text[0];
-    int current_Text_char_index = 0;
+    int Text_lenght = strlen(Text);
+    int current_line = 0;
+    int line_start = 0;
+    int line_end = 0;
 
-    while(current_Text_char != 0 && Current_line >= line)
+    for(int i = 0;i<Text_lenght;i++)
     {
-        current_Text_char = Text[current_Text_char_index];
-
-        if(current_Text_char == '\n')
+        if(current_line == line)
         {
-            Current_line++;
+            break;
         }
 
-        current_Text_char_index++;
+        if(Text[i] == '\n')
+        {
+            //hacky but works
+            line_start = line_end;
+            
+            if(line_start != 0)
+            {
+                line_start = line_end+1;
+            }
+            
+            current_line++;
+            line_end = i;
+        }
     }
 
-    //Incase the line we were searching was to high
-    if(Current_line != line)
+    if(current_line != line)
     {
-        return  nullptr;
+        return nullptr;
     }
 
-    return &Text[current_Text_char_index];
+    int line_size = line_end - line_start;
+    char *new_line = (char *) malloc(sizeof(char *)*line_size);
+    
+    for(int i = 0;i<Text_lenght;i++)
+    {
+        new_line[i] = Text[line_start+i];
+    }
+    
+    new_line[line_size] = 0x0;
+
+    return new_line;
 }
