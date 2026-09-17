@@ -6,6 +6,8 @@ linux:
 	g++ \
 	src/main.cpp \
 	src/http.cpp \
+	-fpermissive \
+	-fdiagnostics-color=always \
 	-g \
 	-o build/http.app
 
