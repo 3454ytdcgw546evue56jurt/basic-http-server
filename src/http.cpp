@@ -126,9 +126,31 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         if(request_type_checked != nullptr)
         {
             HTTP_request_type_enum = RequestTypes.at(i).Enum;
+            break;
         }
     }
     Parsed_request.type = HTTP_request_type_enum;
+    //parsing the requested file
+    int Requested_file_start = 0;
+    int Requested_file_end = 0;
+    int Requested_file_size = 0;
+    char *Requested_file = nullptr;
+    if(request_type_checked != nullptr)
+    {
+        Requested_file_start = Char_at(request_type_checked,'/')+1;
+        Requested_file_size = Char_at(current_http_line,' ',Requested_file_start);
+
+        Requested_file = (char *)malloc(Requested_file_size+1);
+        
+        for(int i = 0;i<Requested_file_size;i++)
+        {
+            Requested_file[i] = request_type_checked[Requested_file_start+i];
+        }
+
+        Requested_file[Requested_file_size+1] = 0x0;
+    }
+
+    Parsed_request.path = Requested_file;
 
     //getting the version
     char *version = strstr(current_http_line, "HTTP/")+5;

@@ -72,3 +72,17 @@ int Char_at(char *Text,char character)
     
     return -1;
 }
+int Char_at(char *Text,char character,int offset)
+{
+    int Text_lenght = strlen(Text)+1;
+
+    for(int i = 0;i<Text_lenght;i++)
+    {
+        if(Text[offset+i] == character)
+        {
+            return i;
+        }
+    }
+    
+    return -1;
+}
