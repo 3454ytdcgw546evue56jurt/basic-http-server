@@ -86,3 +86,30 @@ int Char_at(char *Text,char character,int offset)
     
     return -1;
 }
+
+char *File_text_load(char * Filename)
+{
+    if(Filename == nullptr)
+    {
+        return nullptr;
+    }
+
+    FILE* TextFile;
+    TextFile = fopen(Filename, "r");
+
+    if(TextFile == nullptr)
+    {
+        return nullptr;
+    }
+
+    fseek(TextFile, 0, SEEK_END);
+    int Textfile_Size = ftell(TextFile);
+    fseek(TextFile, 0, SEEK_SET);
+    char *TextData = (char *) malloc(Textfile_Size);
+
+    fread(TextData,Textfile_Size,1,TextFile);
+
+    fclose(TextFile);
+
+    return TextData;
+}

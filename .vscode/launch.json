@@ -21,7 +21,7 @@
             "program": "${workspaceFolder}\\build\\http.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}\\build",
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",

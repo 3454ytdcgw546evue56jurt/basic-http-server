@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #if defined(_WIN32)
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -18,7 +19,6 @@
 #include "Utils.h"
 #include <cstring>
 #include <vector>
-#include <string>
 
 using namespace std;
 
@@ -147,7 +147,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
             Requested_file[i] = request_type_checked[Requested_file_start+i];
         }
 
-        Requested_file[Requested_file_size+1] = 0x0;
+        Requested_file[Requested_file_size] = 0x0;
     }
 
     Parsed_request.path = Requested_file;
@@ -218,14 +218,41 @@ void Server_http_thread(int connection_socket)
         {
             HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
 
-            const char* server_response =
+            switch(request.type)
+            {
+                //TODO SAFETY CHECKS
+                case GET:
+                {
+                    char *Requested_data = File_text_load(request.path);
+                    int Requested_data_size = strlen(Requested_data);
+
+                    const char* server_response_template = 
                         "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html; charset=UTF-8\r\n"
-                        "Content-Length: 24\r\n"
+                        "Content-Length: %d\r\n"
                         "Connection: close\r\n"
                         "\r\n"
-                        "<h1>Hello from C++!</h1>";
-            send(connection_socket,server_response, strlen(server_response), 0); 
+                        "%s";
+                    
+                    int server_response_size = snprintf(nullptr,0,server_response_template,Requested_data_size,Requested_data);
+                    char *server_response = (char *) malloc(server_response_size+1);
+                    snprintf(server_response,server_response_size,server_response_template,Requested_data_size,Requested_data);
+                    server_response[server_response_size] = 0x0;
+                    
+                    send(connection_socket,server_response, strlen(server_response), 0);
+                    free(server_response); 
+
+                    printf("Client disconnected... \n");
+                    close(connection_socket);
+                    return;
+                }
+                break;
+                default:
+                {
+                    //TODO Handle invalid requests
+                }
+                break;
+            }
         }
         else if(data_size < 0)
         {
