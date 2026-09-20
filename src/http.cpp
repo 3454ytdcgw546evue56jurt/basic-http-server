@@ -224,6 +224,16 @@ void Server_http_thread(int connection_socket)
                 case GET:
                 {
                     char *Requested_data = File_text_load(request.path);
+                    if(Requested_data == nullptr)
+                    {
+                        const char* server_response_404 = "HTTP/1.1 200 OK\r\n";
+
+                        send(connection_socket,server_response_404, strlen(server_response_404), 0);
+                        printf("File not %s found... \n",request.path);
+                        close(connection_socket);
+                        return;
+                    }
+
                     int Requested_data_size = strlen(Requested_data);
 
                     const char* server_response_template = 
