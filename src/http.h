@@ -118,6 +118,8 @@ struct HTTP_request
     char *path;
     vector<content_type> Accept;
 
+    bool keep_conneted = false;
+
     vector<char*> meta_datas;
 };
 

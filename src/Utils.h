@@ -2,6 +2,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <filesystem>
+
+using namespace std;
 
 //Standart c library doesn't have this basic function ¯\_(ツ)_/¯
 //Dumb as fuck
@@ -92,32 +95,23 @@ int Char_at(char *Text,char character,int offset)
     return -1;
 }
 
-char *File_text_load(char *Filename)
+char *File_text_load(char *FileName)
 {
-    char *Filename_safe = Filename;
-    if(Filename == nullptr)
+    FILE* Project_file;
+    Project_file = fopen(FileName, "r");
+
+    if(Project_file == NULL)
     {
-        return nullptr;
+        return NULL;
     }
 
-    FILE* TextFile;
-    TextFile = fopen(Filename, "r");
+    int Project_file_size = std::filesystem::file_size(FileName);
+    char *file_contents = (char*) malloc(Project_file_size);
+    fread(file_contents,Project_file_size,1,Project_file);
 
-    if(TextFile == nullptr)
-    {
-        return nullptr;
-    }
+    fclose(Project_file);
 
-    fseek(TextFile, 0, SEEK_END);
-    int Textfile_Size = ftell(TextFile);
-    fseek(TextFile, 0, SEEK_SET);
-    char *TextData = (char *) malloc(Textfile_Size);
-
-    fread(TextData,Textfile_Size,1,TextFile);
-
-    fclose(TextFile);
-
-    return TextData;
+    return file_contents;
 }
 
 char *Get_Metadata_contents(char *Metadata)

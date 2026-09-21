@@ -206,13 +206,22 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         meta_data_name = Get_Metadata_name(Parsed_request.meta_datas.at(i));
         if(meta_data_name == nullptr)
         {
-            meta_data_name = "";
+            meta_data_name = " ";
         }
 
         if(strcmp(meta_data_name,"Accept") == 0)
         {
             accepted_content_types = Get_Metadata_contents(Parsed_request.meta_datas.at(i));
             break;
+        }
+        else if(strcmp(meta_data_name,"Connection") == 0)
+        {
+            char *keep_conneted = Get_Metadata_contents(Parsed_request.meta_datas.at(i));
+            if(strcmp(keep_conneted,"keep-alive\r") == 0)
+            {
+                Parsed_request.keep_conneted = true;
+            }
+            free(keep_conneted);
         }
         else if(accepted_content_types != nullptr)
         {
@@ -260,6 +269,7 @@ void End_http_thread(int code)
 void Server_http_thread(int connection_socket)
 {
     std::atexit(Server_http_thread_cleanup);
+    bool disconnect_on_end = false;
     curr_connection_socket = connection_socket;
 
     while(1)
@@ -278,6 +288,8 @@ void Server_http_thread(int connection_socket)
         if(data_size > 0)
         {
             HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
+
+            disconnect_on_end = request.keep_conneted;
 
             if(request.http_major_version < min_major_ver || request.http_minor_version < min_minor_ver)
             {
@@ -307,7 +319,7 @@ void Server_http_thread(int connection_socket)
                     {
                         Curr_content_type = content_types.at(i).name;
 
-                        if(strstr(Requested_content_type,Curr_content_type) != nullptr)
+                        if(strstr(Curr_content_type,Requested_content_type) != nullptr)
                         {
                             Content_type = Curr_content_type;
                         }
@@ -347,7 +359,10 @@ void Server_http_thread(int connection_socket)
                     send(curr_connection_socket,server_response, strlen(server_response), 0);
                     free(server_response);
 
-                    End_http_thread(0);
+                    if(!disconnect_on_end)
+                    {
+                        End_http_thread(0);
+                    }
                 }
                 break;
                 default:
@@ -394,7 +409,10 @@ void Server_http_thread(int connection_socket)
         }
         else if(data_size == 0)
         {
-            End_http_thread(0);
+            if(!disconnect_on_end)
+            {
+                End_http_thread(0);
+            }
         }
     }
 }
