@@ -122,12 +122,13 @@ struct HTTP_request
     int http_minor_version = 0;
 
     vector<content_type> accept;
-
     char *path;
-    char *host;
 
     vector<meta_data> meta_datas;
 };
+
+extern int min_major_ver;
+extern int min_minor_ver;
 
 void Init_HTTP_Utils();
 HTTP_request Parse_HTTP_request(char Data[],int Request_size);

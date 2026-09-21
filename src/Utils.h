@@ -87,8 +87,9 @@ int Char_at(char *Text,char character,int offset)
     return -1;
 }
 
-char *File_text_load(char * Filename)
+char *File_text_load(char *Filename)
 {
+    char *Filename_safe = Filename;
     if(Filename == nullptr)
     {
         return nullptr;
@@ -96,6 +97,7 @@ char *File_text_load(char * Filename)
 
     FILE* TextFile;
     TextFile = fopen(Filename, "r");
+    perror("fopen");
 
     if(TextFile == nullptr)
     {

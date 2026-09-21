@@ -152,6 +152,11 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 
     Parsed_request.path = Requested_file;
 
+    if(strlen(Parsed_request.path) == 0)
+    {
+        Parsed_request.path = "index.html";
+    }
+
     //getting the version
     char *version = strstr(current_http_line, "HTTP/")+5;
     
@@ -192,50 +197,74 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     return Parsed_request;
 }
 
+int curr_connection_socket;
+int min_major_ver = 1;
+int min_minor_ver = 1;
+
 void Server_http_thread_cleanup()
 {
-    //TODO Thread cleanup
+    printf("Client disconnected... \n");
+    close(curr_connection_socket);
+}
+
+void End_http_thread(int code)
+{
+    Server_http_thread_cleanup();
+    #if defined(_WIN32)
+        ExitThread(code);
+    #elif defined(__linux__)
+        pthread_exit(nullptr);
+    #endif
 }
 
 void Server_http_thread(int connection_socket)
 {
     std::atexit(Server_http_thread_cleanup);
+    curr_connection_socket = connection_socket;
 
     while(1)
     {
         #if defined(__linux__)
             int Data_buffer_size = 0;
-            ioctl(connection_socket, FIONREAD, &Data_buffer_size);
+            ioctl(curr_connection_socket, FIONREAD, &Data_buffer_size);
         #elif defined(_WIN32)
             u_long Data_buffer_size = 0;
-            ioctlsocket(connection_socket, FIONREAD, &Data_buffer_size);
+            ioctlsocket(curr_connection_socket, FIONREAD, &Data_buffer_size);
         #endif
         
         char Data_buffer[Data_buffer_size];
-        int data_size = recv(connection_socket, Data_buffer, Data_buffer_size, 0);
+        int data_size = recv(curr_connection_socket, Data_buffer, Data_buffer_size, 0);
 
         if(data_size > 0)
         {
             HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
 
+            if(request.http_major_version < min_major_ver || request.http_minor_version < min_minor_ver)
+            {
+                const char* server_response_505 = "HTTP/1.1 505 HTTP Version Not Supported\r\nContent-Length: 0\r\nConnection: close";
+
+                send(curr_connection_socket,server_response_505, strlen(server_response_505), 0);
+                printf("Requested http version: %d.%d minimal: %d.%d\n",request.http_major_version,request.http_minor_version,min_major_ver,min_minor_ver);
+                End_http_thread(0);
+            }
+
             switch(request.type)
             {
-                //TODO SAFETY CHECKS
                 case GET:
                 {
                     char *Requested_data = File_text_load(request.path);
                     if(Requested_data == nullptr)
                     {
-                        const char* server_response_404 = "HTTP/1.1 200 OK\r\n";
+                        const char* server_response_404 = "HTTP/1.1 404 Resource not found\r\nContent-Length: 0\r\nConnection: close";
 
-                        send(connection_socket,server_response_404, strlen(server_response_404), 0);
+                        send(curr_connection_socket,server_response_404, strlen(server_response_404), 0);
                         printf("File not %s found... \n",request.path);
-                        close(connection_socket);
-                        return;
+                        End_http_thread(0);
                     }
 
                     int Requested_data_size = strlen(Requested_data);
 
+                    //TODO some connection wanna stay open
                     const char* server_response_template = 
                         "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html; charset=UTF-8\r\n"
@@ -249,30 +278,54 @@ void Server_http_thread(int connection_socket)
                     snprintf(server_response,server_response_size,server_response_template,Requested_data_size,Requested_data);
                     server_response[server_response_size] = 0x0;
                     
-                    send(connection_socket,server_response, strlen(server_response), 0);
+                    send(curr_connection_socket,server_response, strlen(server_response), 0);
                     free(server_response); 
 
-                    printf("Client disconnected... \n");
-                    close(connection_socket);
-                    return;
+                    End_http_thread(0);
                 }
                 break;
                 default:
                 {
-                    //TODO Handle invalid requests
+                    //getting the request type name
+                    int RequestTypes_size = RequestTypes.size();
+                    const char *RequestType_Name = "Invalid";
+                    HTTP_request_type_enums HTTP_request_type_enum = INVALID;
+                    for(int i =0;i<RequestTypes_size;i++)
+                    {
+                        if(request.type == RequestTypes.at(i).Enum)
+                        {
+                            RequestType_Name = RequestTypes.at(i).name;
+                            break;
+                        }
+                    }
+
+                    printf("Invalid  or uniplemented request %s\n",RequestType_Name);
+                    End_http_thread(-1);
                 }
                 break;
             }
         }
         else if(data_size < 0)
         {
-            //TODO error handling
+            const char* server_response_500 = "HTTP/1.1 500 Internal server error\r\nContent-Length: 0\r\nConnection: close";
+            send(curr_connection_socket,server_response_500, strlen(server_response_500), 0);
+
+            #if defined(__linux__)
+                if(data_size < 0)
+                {
+                    printf("Error receving a packet: %s, code:%d\n",strerror(curr_connection_socket), curr_connection_socket);
+                }
+            #elif defined(_WIN32)
+                if(data_size < 0)
+                {
+                    printf("Error receving a packet: %s, code:%d\n",WSAGetLastError(),curr_connection_socket);
+                }
+            #endif
+            End_http_thread(-1);
         }
         else if(data_size == 0)
         {
-            printf("Client disconnected... \n");
-            close(connection_socket);
-            return;
+            End_http_thread(0);
         }
     }
 }
