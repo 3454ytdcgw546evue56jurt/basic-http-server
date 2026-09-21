@@ -187,6 +187,11 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
 
         if(current_http_line != nullptr)
         {
+            //TODO
+            //FIXME
+            //curr_metadata_line Gets cutoff and turns into urr_metadata_line until the last one
+            //Also the last two are as follows empty and garbage data.
+            //Possible issue with Get_line
             printf("curr_metadata_line %s \n",current_http_line);
             free(current_http_line);
         }
