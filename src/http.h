@@ -109,22 +109,15 @@ struct content_type
     }
 };
 
-struct meta_data
-{
-    char *Name;
-    char *content;
-};
-
 struct HTTP_request
 {
     HTTP_request_type_enums type = GET;
     int http_major_version = 0;
     int http_minor_version = 0;
-
-    vector<content_type> accept;
+    
     char *path;
 
-    vector<meta_data> meta_datas;
+    vector<char*> meta_datas;
 };
 
 extern int min_major_ver;

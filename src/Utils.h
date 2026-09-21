@@ -45,6 +45,10 @@ char *Get_line(char *Text,unsigned int line)
     }
 
     int line_size = line_end - line_start;
+    if(line_size <= 0)
+    {
+        return nullptr;
+    }
     char *new_line = (char *) malloc(line_size+1);
     
     for(int i = 0;i<line_size;i++)
@@ -72,6 +76,7 @@ int Char_at(char *Text,char character)
     
     return -1;
 }
+
 int Char_at(char *Text,char character,int offset)
 {
     int Text_lenght = strlen(Text)+1;
@@ -97,7 +102,6 @@ char *File_text_load(char *Filename)
 
     FILE* TextFile;
     TextFile = fopen(Filename, "r");
-    perror("fopen");
 
     if(TextFile == nullptr)
     {
@@ -114,4 +118,50 @@ char *File_text_load(char *Filename)
     fclose(TextFile);
 
     return TextData;
+}
+
+char *Get_Metadata_contents(char *Metadata)
+{
+    int contents_start = Char_at(Metadata,': ')+1;
+    char curr_contents_char = 0x1;
+    int contents_start_size = 0;
+
+    while(curr_contents_char != 0x0)
+    {
+        curr_contents_char = Metadata[contents_start+contents_start_size];
+        contents_start_size++;
+    }
+    
+    if(contents_start_size <= 0)
+    {
+        return nullptr;
+    }
+
+    char *contents = (char *)malloc(contents_start_size+1);
+    for(int i = 0;i<contents_start_size;i++)
+    {
+        contents[i] = Metadata[contents_start+i];
+    }
+    contents[contents_start_size] = 0x0;
+
+    return contents;
+}
+
+char *Get_Metadata_name(char *Metadata)
+{
+    int contents_namesize = Char_at(Metadata,': ')-1;
+
+    if(contents_namesize <= 0)
+    {
+        return nullptr;
+    }
+
+    char *contents = (char *)malloc(contents_namesize+1);
+    for(int i = 0;i<contents_namesize;i++)
+    {
+        contents[i] = Metadata[i];
+    }
+    contents[contents_namesize] = 0x0;
+    
+    return contents;
 }

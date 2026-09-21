@@ -193,7 +193,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
             //Also the last two are as follows empty and garbage data.
             //Possible issue with Get_line
             printf("curr_metadata_line %s \n",current_http_line);
-            free(current_http_line);
+            Parsed_request.meta_datas.push_back(current_http_line);
         }
     }
 
@@ -249,7 +249,11 @@ void Server_http_thread(int connection_socket)
                 const char* server_response_505 = "HTTP/1.1 505 HTTP Version Not Supported\r\nContent-Length: 0\r\nConnection: close";
 
                 send(curr_connection_socket,server_response_505, strlen(server_response_505), 0);
-                printf("Requested http version: %d.%d minimal: %d.%d\n",request.http_major_version,request.http_minor_version,min_major_ver,min_minor_ver);
+                printf("Requested http version: %d.%d minimal: %d.%d\n",
+                                                                        request.http_major_version,
+                                                                        request.http_minor_version,
+                                                                        min_major_ver,
+                                                                        min_minor_ver);
                 End_http_thread(0);
             }
 
@@ -258,6 +262,34 @@ void Server_http_thread(int connection_socket)
                 case GET:
                 {
                     char *Requested_data = File_text_load(request.path);
+                    char *accepted_content_types = nullptr;
+                    char *meta_data_name = nullptr;
+                    int accepted_content_type_size = request.meta_datas.size();
+
+                    //For now this is how wwe sand bakc accepted content types
+                    //TODO Check contenty types before loading and parsing a file
+                    for(int i = 0;i<accepted_content_type_size;i++)
+                    {
+                        meta_data_name = Get_Metadata_name(request.meta_datas.at(i));
+                        if(meta_data_name == nullptr)
+                        {
+                            meta_data_name = "";
+                        }
+
+                        if(strcmp(meta_data_name,"Accept") == 0)
+                        {
+                            accepted_content_types = Get_Metadata_contents(request.meta_datas.at(i));
+                            break;
+                        }
+                        else if(accepted_content_types != nullptr)
+                        {
+                            free(accepted_content_types);
+                            accepted_content_types = nullptr;
+                        }
+
+                        free(meta_data_name);
+                    }
+
                     if(Requested_data == nullptr)
                     {
                         const char* server_response_404 = "HTTP/1.1 404 Resource not found\r\nContent-Length: 0\r\nConnection: close";
@@ -272,25 +304,29 @@ void Server_http_thread(int connection_socket)
                     //TODO some connection wanna stay open
                     const char* server_response_template = 
                         "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: text/html; charset=UTF-8\r\n"
+                        "Content-Type: %s\r\n"
                         "Content-Length: %d\r\n"
                         "Connection: close\r\n"
                         "\r\n"
                         "%s";
                     
-                    int server_response_size = snprintf(nullptr,0,server_response_template,Requested_data_size,Requested_data);
+                    int server_response_size = snprintf(nullptr,0,server_response_template,accepted_content_types,Requested_data_size,Requested_data);
                     char *server_response = (char *) malloc(server_response_size+1);
-                    snprintf(server_response,server_response_size,server_response_template,Requested_data_size,Requested_data);
+                    snprintf(server_response,server_response_size,server_response_template,accepted_content_types,Requested_data_size,Requested_data);
                     server_response[server_response_size] = 0x0;
                     
                     send(curr_connection_socket,server_response, strlen(server_response), 0);
                     free(server_response); 
+                    free(accepted_content_types);
 
                     End_http_thread(0);
                 }
                 break;
                 default:
                 {
+                    const char* server_response_500 = "HTTP/1.1 500 Internal server error\r\nContent-Length: 0\r\nConnection: close";
+                    send(curr_connection_socket,server_response_500, strlen(server_response_500), 0);
+
                     //getting the request type name
                     int RequestTypes_size = RequestTypes.size();
                     const char *RequestType_Name = "Invalid";
