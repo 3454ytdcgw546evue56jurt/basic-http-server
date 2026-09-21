@@ -2,6 +2,10 @@ This is basic HTTP web server implementation.
 And for now i'm planning just HTTP support.
 So not PHP or MYSQL, i may change my mind in the future.
 
+And i used AI to help me reaserch stuff..
+All of the code is still written with my pure stupidity.
+Except for now text websites.
+
 Windows need system variable gdb to point to gdb debbuger.
 
 Also test websites are temporarily vibe coded.
