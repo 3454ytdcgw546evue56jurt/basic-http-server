@@ -116,6 +116,7 @@ struct HTTP_request
     int http_minor_version = 0;
     
     char *path;
+    vector<content_type> Accept;
 
     vector<char*> meta_datas;
 };
