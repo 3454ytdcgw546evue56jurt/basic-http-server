@@ -165,3 +165,35 @@ char *Get_Metadata_name(char *Metadata)
     
     return contents;
 }
+
+char *file_get_type(char *filename)
+{
+    int filename_length = strlen(filename);
+    int file_type_start = 0;
+    
+    for(int i = filename_length;i>0;i--)
+    {
+        if(filename[i] == '.')
+        {
+            file_type_start = i+1;
+            break;
+        }
+    }
+
+    int file_type_size = filename_length-file_type_start;
+
+    if(file_type_size <= 0)
+    {
+        return nullptr;
+    }
+
+    char *file_type = (char *) malloc(file_type_size+1);
+    for(int i = 0;i<file_type_size;i++)
+    {
+        file_type[i] = filename[file_type_start+i];
+    }
+
+    file_type[file_type_size] = 0x0;
+
+    return file_type;
+}

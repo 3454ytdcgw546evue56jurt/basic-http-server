@@ -175,7 +175,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
     Parsed_request.http_major_version = major_version;
     Parsed_request.http_minor_version = minor_version;
     //To lazy to make it better
-    
+
     //Reading the meta data
     free(current_http_line);
     int current_http_line_index = 2;
@@ -196,6 +196,41 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
             Parsed_request.meta_datas.push_back(current_http_line);
         }
     }
+
+    //Accepted content types
+    char *accepted_content_types = nullptr;
+    char *meta_data_name = nullptr;
+    int accepted_content_type_size = Parsed_request.meta_datas.size();
+    for(int i = 0;i<accepted_content_type_size;i++)
+    {
+        meta_data_name = Get_Metadata_name(Parsed_request.meta_datas.at(i));
+        if(meta_data_name == nullptr)
+        {
+            meta_data_name = "";
+        }
+
+        if(strcmp(meta_data_name,"Accept") == 0)
+        {
+            accepted_content_types = Get_Metadata_contents(Parsed_request.meta_datas.at(i));
+            break;
+        }
+        else if(accepted_content_types != nullptr)
+        {
+            free(accepted_content_types);
+            accepted_content_types = nullptr;
+        }
+    }
+
+    int content_types_size = content_types.size();
+    for(int i = 0;i<content_types_size;i++)
+    {
+        if(strstr(content_types.at(i).name,accepted_content_types) != nullptr)
+        {
+            Parsed_request.Accept.push_back(content_types.at(i));
+        }
+    }
+
+    free(meta_data_name);
 
     printf("HTTP request parsed\n");
 
@@ -262,36 +297,30 @@ void Server_http_thread(int connection_socket)
                 case GET:
                 {
                     char *Requested_data = File_text_load(request.path);
-                    char *accepted_content_types = nullptr;
-                    char *meta_data_name = nullptr;
-                    int accepted_content_type_size = request.meta_datas.size();
+                    char *Requested_content_type = file_get_type(request.path);
+                    const char *Content_type = nullptr;
+                    const char *Curr_content_type = nullptr;
 
-                    //For now this is how wwe sand bakc accepted content types
-                    //TODO Check contenty types before loading and parsing a file
-                    for(int i = 0;i<accepted_content_type_size;i++)
+                    int content_types_size = content_types.size();
+
+                    for(int i = 0;i<content_types_size;i++)
                     {
-                        meta_data_name = Get_Metadata_name(request.meta_datas.at(i));
-                        if(meta_data_name == nullptr)
-                        {
-                            meta_data_name = "";
-                        }
+                        Curr_content_type = content_types.at(i).name;
 
-                        if(strcmp(meta_data_name,"Accept") == 0)
+                        if(strstr(Requested_content_type,Curr_content_type) != nullptr)
                         {
-                            accepted_content_types = Get_Metadata_contents(request.meta_datas.at(i));
-                            break;
+                            Content_type = Curr_content_type;
                         }
-                        else if(accepted_content_types != nullptr)
-                        {
-                            free(accepted_content_types);
-                            accepted_content_types = nullptr;
-                        }
-
-                        free(meta_data_name);
                     }
+                    free(Requested_content_type);
 
-                    if(Requested_data == nullptr)
+                    if(Requested_data == nullptr || Content_type == nullptr)
                     {
+                        if(Requested_data != nullptr)
+                        {
+                            free(Requested_data);
+                        }
+
                         const char* server_response_404 = "HTTP/1.1 404 Resource not found\r\nContent-Length: 0\r\nConnection: close";
 
                         send(curr_connection_socket,server_response_404, strlen(server_response_404), 0);
@@ -310,14 +339,13 @@ void Server_http_thread(int connection_socket)
                         "\r\n"
                         "%s";
                     
-                    int server_response_size = snprintf(nullptr,0,server_response_template,accepted_content_types,Requested_data_size,Requested_data);
+                    int server_response_size = snprintf(nullptr,0,server_response_template,Content_type,Requested_data_size,Requested_data);
                     char *server_response = (char *) malloc(server_response_size+1);
-                    snprintf(server_response,server_response_size,server_response_template,accepted_content_types,Requested_data_size,Requested_data);
+                    snprintf(server_response,server_response_size,server_response_template,Content_type,Requested_data_size,Requested_data);
                     server_response[server_response_size] = 0x0;
                     
                     send(curr_connection_socket,server_response, strlen(server_response), 0);
-                    free(server_response); 
-                    free(accepted_content_types);
+                    free(server_response);
 
                     End_http_thread(0);
                 }
