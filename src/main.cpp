@@ -111,7 +111,7 @@ int main(int argc,char **args)
     while(1)
     {
         //Every client gets it's own thread.
-        //TODO make a config option to made it instead spawn a new process
+        //TODO make a config/CLI option to made it instead spawn a new process
         int clientSocket = accept(HTTPSocket, nullptr, nullptr);
         if(clientSocket >= 0)
         {

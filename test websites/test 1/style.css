@@ -1,0 +1,66 @@
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Comic Sans MS, cursive;
+      background: #ff69b4;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    .box {
+      text-align: center;
+      background: #ffff00;
+      border: 8px dashed #000;
+      padding: 40px;
+      transform: rotate(-2deg);
+      box-shadow: 15px 15px 0 #000;
+    }
+
+    h1 {
+      font-size: 60px;
+      margin: 0 0 20px;
+    }
+
+    p {
+      font-size: 24px;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 25px;
+      padding: 15px 30px;
+      background: #00ffff;
+      border: 5px solid #000;
+      cursor: pointer;
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    button:active {
+      transform: translate(8px, 8px);
+      box-shadow: none;
+    }
+
+    #emoji {
+      position: fixed;
+      font-size: 50px;
+      pointer-events: none;
+      animation: fly 2s linear forwards;
+    }
+
+    @keyframes fly {
+      from {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(-500px) rotate(720deg);
+        opacity: 0;
+      }
+    }
