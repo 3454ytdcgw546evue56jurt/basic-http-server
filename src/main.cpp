@@ -74,7 +74,7 @@ int main(int argc,char **args)
     #if defined(__linux__)
         if(bind_result < 0)
         {
-            const char *error_message = strerror(HTTPSocket);
+            const char *error_message = strerror(errno);
 
             printf("Error binding server socket:%s, code: %d\n",error_message,bind_result);
             exit(bind_result);

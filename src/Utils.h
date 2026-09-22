@@ -191,3 +191,70 @@ char *file_get_type(char *filename)
 
     return file_type;
 }
+
+bool Addres_is_valid(void *Adress)
+{
+    if(Adress == nullptr)
+    {
+        return false;
+    }
+
+    #if defined(_WIN32)
+    #elif defined(__linux__)
+    
+    FILE *memory_map = fopen("/proc/self/maps", "r");
+    if(memory_map == nullptr)
+    {
+        return false;
+    }
+    
+    int Project_file_size = std::filesystem::file_size("/proc/self/maps");
+    char *Memory_map_contents = (char*) malloc(Project_file_size);
+    fread(Memory_map_contents,Project_file_size,1,memory_map);
+
+    fclose(memory_map);
+    char *Line = Get_line(Memory_map_contents,0);
+    int Line_index = 0;
+
+    void *starting_adress = 0x0;
+    void *ending_adress = 0x0;
+
+    free(Line);
+    while(Line != nullptr)
+    {
+        Line = Get_line(Memory_map_contents,0);
+        Line_index++;
+
+        int lower_addres_end = Char_at(Line,'-');
+        int upper_addres_end = Char_at(Line,' ');
+
+        int lower_addres_size = lower_addres_end;
+        int upper_addres_size = upper_addres_end-lower_addres_end;
+
+        char lower_adress_char[lower_addres_size];
+        char upper_adress_char[upper_addres_size];
+
+        for(int i = 0;i<lower_addres_size;i++)
+        {
+            lower_adress_char[i] = Line[i];
+        }
+        lower_adress_char[lower_addres_size] = 0x0;
+        for(int i = 0;i<upper_addres_size;i++)
+        {
+            upper_adress_char[i] = Line[lower_addres_end+i];
+        }
+        upper_adress_char[upper_addres_size] = 0x0;
+
+        starting_adress = (void *) atoi(lower_adress_char);
+        ending_adress = (void *) atoi(upper_adress_char);
+
+        if(starting_adress > Adress && Adress < ending_adress)
+        {
+            return true;
+        }
+    }
+
+    #endif
+
+    return false;
+}

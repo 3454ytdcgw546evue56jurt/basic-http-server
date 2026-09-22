@@ -197,7 +197,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         }
     }
 
-    //Accepted content types
+    //Paring metadata
     char *accepted_content_types = nullptr;
     char *meta_data_name = nullptr;
     int accepted_content_type_size = Parsed_request.meta_datas.size();
@@ -212,7 +212,6 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         if(strcmp(meta_data_name,"Accept") == 0)
         {
             accepted_content_types = Get_Metadata_contents(Parsed_request.meta_datas.at(i));
-            break;
         }
         else if(strcmp(meta_data_name,"Connection") == 0)
         {
@@ -223,10 +222,10 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
             }
             free(keep_conneted);
         }
-        else if(accepted_content_types != nullptr)
+        else if(Addres_is_valid(meta_data_name))
         {
-            free(accepted_content_types);
-            accepted_content_types = nullptr;
+            free(meta_data_name);
+            meta_data_name = nullptr;
         }
     }
 
@@ -239,7 +238,7 @@ HTTP_request Parse_HTTP_request(char Data[],int Request_size)
         }
     }
 
-    free(meta_data_name);
+    free(accepted_content_types);
 
     printf("HTTP request parsed\n");
 
@@ -269,7 +268,7 @@ void End_http_thread(int code)
 void Server_http_thread(int connection_socket)
 {
     std::atexit(Server_http_thread_cleanup);
-    bool disconnect_on_end = false;
+    bool disconnect_on_end = true;
     curr_connection_socket = connection_socket;
 
     while(1)
@@ -289,7 +288,7 @@ void Server_http_thread(int connection_socket)
         {
             HTTP_request request = Parse_HTTP_request(Data_buffer,Data_buffer_size);
 
-            disconnect_on_end = request.keep_conneted;
+            disconnect_on_end = !request.keep_conneted;
 
             if(request.http_major_version < min_major_ver || request.http_minor_version < min_minor_ver)
             {
@@ -342,14 +341,28 @@ void Server_http_thread(int connection_socket)
 
                     int Requested_data_size = strlen(Requested_data);
 
+                    const char* server_response_template = nullptr;
                     //TODO some connection wanna stay open
-                    const char* server_response_template = 
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: %s\r\n"
-                        "Content-Length: %d\r\n"
-                        "Connection: close\r\n"
-                        "\r\n"
-                        "%s";
+                    if(disconnect_on_end)
+                    {
+                        server_response_template = 
+                            "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: %s\r\n"
+                            "Content-Length: %d\r\n"
+                            "Connection: close\r\n"
+                            "\r\n"
+                            "%s";
+                    }
+                    else
+                    {
+                        server_response_template = 
+                                "HTTP/1.1 200 OK\r\n"
+                                "Content-Type: %s\r\n"
+                                "Content-Length: %d\r\n"
+                                "Connection: keep-alive\r\n"
+                                "\r\n"
+                                "%s";
+                    }
                     
                     int server_response_size = snprintf(nullptr,0,server_response_template,Content_type,Requested_data_size,Requested_data);
                     char *server_response = (char *) malloc(server_response_size+1);
@@ -359,7 +372,7 @@ void Server_http_thread(int connection_socket)
                     send(curr_connection_socket,server_response, strlen(server_response), 0);
                     free(server_response);
 
-                    if(!disconnect_on_end)
+                    if(disconnect_on_end)
                     {
                         End_http_thread(0);
                     }
@@ -409,7 +422,7 @@ void Server_http_thread(int connection_socket)
         }
         else if(data_size == 0)
         {
-            if(!disconnect_on_end)
+            if(disconnect_on_end)
             {
                 End_http_thread(0);
             }
